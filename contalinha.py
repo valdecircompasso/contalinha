@@ -7,6 +7,9 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
+# Valdecir Carvalho - utilitario para contar linhas de codigo fonte para o smart engineering
+
+
 print("""
  #####  #     #    #    ######  #######    ####### #     #  #####  ### #     # ####### ####### ######  ### #     #  #####  
 #     # ##   ##   # #   #     #    #       #       ##    # #     #  #  ##    # #       #       #     #  #  ##    # #     # 
