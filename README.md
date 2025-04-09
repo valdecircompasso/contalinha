@@ -69,6 +69,12 @@ Additionally, the script will create a CSV file in the same directory where it w
 
 ### Updates
 
+#### April 9, 2025
+* Added warning system for unrecognized file extensions
+* The script now displays a highlighted warning panel when it encounters files with extensions not defined in the COMMENT_SYNTAX dictionary
+* Warning includes a list of all unrecognized extensions, number and percentage of affected files and lines
+* This helps identify potential inaccuracies in comment counting for files processed with generic patterns
+
 #### April 7, 2025
 * Added detection and counting of blank lines and comment lines
 * Added calculation of actual code lines (total lines - blank lines - comment lines)
@@ -142,6 +148,12 @@ Além disso, o script criará um arquivo CSV no mesmo diretório onde foi execut
 2. Uma lista detalhada de cada arquivo encontrado, incluindo seu caminho relativo, tipo de arquivo (extensão), tamanho em Kbytes, número total de linhas, linhas em branco, linhas de comentário e linhas de código.
 
 ### Atualizações
+
+#### 9 de Abril de 2025
+* Adicionado sistema de aviso para extensões de arquivo não reconhecidas
+* O script agora exibe um painel de aviso destacado quando encontra arquivos com extensões não definidas no dicionário COMMENT_SYNTAX
+* O aviso inclui uma lista de todas as extensões não reconhecidas, número e porcentagem de arquivos e linhas afetados
+* Isso ajuda a identificar possíveis imprecisões na contagem de comentários para arquivos processados com padrões genéricos
 
 #### 7 de Abril de 2025
 * Adicionada detecção e contagem de linhas em branco e linhas de comentário

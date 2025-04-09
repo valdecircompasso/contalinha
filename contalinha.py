@@ -76,6 +76,8 @@ COMMENT_SYNTAX = {
     # COBOL
     '.cob': {'line': ['*'], 'block': []},
     '.cbl': {'line': ['*'], 'block': []},
+    '.cpy': {'line': ['*'], 'block': []},
+    '.esf': {'line': ['*'], 'block': []},
     # Assembly
     '.asm': {'line': [';'], 'block': []},
     '.s': {'line': [';', '#'], 'block': []},
@@ -266,6 +268,11 @@ def contar_arquivos_e_linhas(diretorio):
     total_tamanho = 0
     detalhes_arquivos = []
     
+    # Conjunto para rastrear extensões não reconhecidas
+    extensoes_nao_reconhecidas = set()
+    arquivos_nao_reconhecidos = 0
+    linhas_nao_reconhecidas = 0
+    
     # Dicionários para contar arquivos e linhas por extensão
     arquivos_por_extensao = defaultdict(int)
     linhas_por_extensao = defaultdict(int)
@@ -283,6 +290,11 @@ def contar_arquivos_e_linhas(diretorio):
             caminho_completo = os.path.join(raiz, arquivo)
             total_arquivos += 1
             arquivos_por_extensao[extensao] += 1
+            
+            # Verificar se a extensão é reconhecida
+            if extensao.lower() not in COMMENT_SYNTAX:
+                extensoes_nao_reconhecidas.add(extensao)
+                arquivos_nao_reconhecidos += 1
 
             try:
                 # Processar o arquivo para contar linhas totais, em branco e de comentário
@@ -291,6 +303,10 @@ def contar_arquivos_e_linhas(diretorio):
                 total_linhas += linhas
                 total_linhas_branco += linhas_branco
                 total_linhas_comentario += linhas_comentario
+                
+                # Contar linhas em arquivos não reconhecidos
+                if extensao.lower() not in COMMENT_SYNTAX:
+                    linhas_nao_reconhecidas += linhas
                 
                 linhas_por_extensao[extensao] += linhas
                 linhas_branco_por_extensao[extensao] += linhas_branco
@@ -314,7 +330,8 @@ def contar_arquivos_e_linhas(diretorio):
 
     return (total_arquivos, total_linhas, total_tamanho, detalhes_arquivos, 
             arquivos_por_extensao, linhas_por_extensao, tamanho_por_extensao,
-            linhas_branco_por_extensao, linhas_comentario_por_extensao)
+            linhas_branco_por_extensao, linhas_comentario_por_extensao,
+            extensoes_nao_reconhecidas, arquivos_nao_reconhecidos, linhas_nao_reconhecidas)
 
 if __name__ == "__main__":
     import sys
@@ -326,7 +343,8 @@ if __name__ == "__main__":
 
     (total_arquivos, total_linhas, total_tamanho, detalhes_arquivos, 
      arquivos_por_extensao, linhas_por_extensao, tamanho_por_extensao,
-     linhas_branco_por_extensao, linhas_comentario_por_extensao) = contar_arquivos_e_linhas(diretorio)
+     linhas_branco_por_extensao, linhas_comentario_por_extensao,
+     extensoes_nao_reconhecidas, arquivos_nao_reconhecidos, linhas_nao_reconhecidas) = contar_arquivos_e_linhas(diretorio)
 
     # Calcular totais de linhas em branco e de comentário
     total_linhas_branco = sum(linhas_branco_por_extensao.values())
@@ -395,6 +413,27 @@ if __name__ == "__main__":
     # Exibir os painéis
     console.print(summary_panel)
     console.print(stats_panel)
+    
+    # Exibir aviso sobre extensões não reconhecidas
+    if extensoes_nao_reconhecidas:
+        porcentagem_arquivos = (arquivos_nao_reconhecidos / total_arquivos) * 100 if total_arquivos > 0 else 0
+        porcentagem_linhas = (linhas_nao_reconhecidas / total_linhas) * 100 if total_linhas > 0 else 0
+        
+        warning_text = (
+            f"[bold]Foram encontrados {arquivos_nao_reconhecidos:,} arquivos ({porcentagem_arquivos:.1f}%) "
+            f"com extensões não reconhecidas:[/]\n"
+            f"{', '.join(sorted(extensoes_nao_reconhecidas))}\n\n"
+            f"Estes arquivos contêm {linhas_nao_reconhecidas:,} linhas ({porcentagem_linhas:.1f}% do total).\n"
+            f"Os comentários nesses arquivos foram identificados usando padrões genéricos, "
+            f"o que pode resultar em contagens imprecisas.\n\n"
+            f"[italic]Considere adicionar essas extensões ao dicionário COMMENT_SYNTAX com as regras apropriadas.[/]"
+        )
+        
+        console.print(Panel(
+            warning_text,
+            title="[bold yellow]AVISO: Extensões Não Reconhecidas[/]",
+            border_style="yellow"
+        ))
     
     # Obter a data e hora atual
     now = datetime.datetime.now()
