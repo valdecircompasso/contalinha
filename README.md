@@ -1,6 +1,6 @@
 # Conta Linha Script
 
-![screenshot](contalinha.png "screenshot").
+![screenshot](screenshot.png "screenshot").
 
 [English](#english) | [Português](#português-do-brasil)
 
