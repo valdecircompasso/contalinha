@@ -1,5 +1,7 @@
 # Conta Linha Script
 
+![screenshot](contalinha.png "screenshot").
+
 [English](#english) | [Português](#português-do-brasil)
 
 <a name="english"></a>
