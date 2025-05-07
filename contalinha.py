@@ -81,6 +81,9 @@ COMMENT_SYNTAX = {
     '.cbl': {'line': ['*'], 'block': []},
     '.cpy': {'line': ['*'], 'block': []},
     '.esf': {'line': ['*'], 'block': []},
+    '.cics': {'line': ['*'], 'block': []},
+    '.cicis': {'line': ['*'], 'block': []},
+    '.jcl': {'line': ['*'], 'block': []},
     # Assembly
     '.asm': {'line': [';'], 'block': []},
     '.s': {'line': [';', '#'], 'block': []},
@@ -119,6 +122,9 @@ COMMENT_SYNTAX = {
     # Batch
     '.bat': {'line': ['REM', '::'], 'block': []},
     '.cmd': {'line': ['REM', '::'], 'block': []},
+    # ASP Classic
+    '.asp': {'line': ["'", 'Rem'], 'block': []},
+
 }
 
 # Padrões comuns de comentários por linha para arquivos não reconhecidos
