@@ -60,14 +60,19 @@ You can run the script in two ways:
 The script will display in the console:
 
 * A summary panel with the total number of files, total lines, blank lines, comment lines, code lines (total - blank - comment), and total size in Kbytes.
-* A statistics panel showing the file count, total lines, blank lines, comment lines, code lines, total size (KB), and percentage of files for each extension type found, sorted by the number of files.
+* A statistics panel showing the file count, total lines, blank lines, comment lines, code lines, **Billable Lines (Total - Blank)**, total size (KB), and percentage of files for each extension type found, sorted by the number of files.
 
 Additionally, the script will create a CSV file in the same directory where it was executed. The filename will follow the format `result_YYYY-MM-DD-HH-MM.csv` (with the current date and time). This file will contain:
 
-1. Statistics by extension.
-2. A detailed list of each file found, including its relative path, file type (extension), size in Kbytes, total lines, blank lines, comment lines, and code lines.
+1. Statistics by extension (including Billable Lines).
+2. A detailed list of each file found, including its relative path, file type (extension), size in Kbytes, total lines, blank lines, comment lines, code lines, and **Billable Lines**.
 
 ### Updates
+
+#### May 7, 2025
+* Added "Billable Lines" column to both console and CSV outputs.
+* "Billable Lines" are calculated as Total Lines - Blank Lines.
+* This provides a metric for lines that are not empty, regardless of whether they are code or comments.
 
 #### April 9, 2025
 * Added warning system for unrecognized file extensions
@@ -140,14 +145,19 @@ Você pode executar o script de duas maneiras:
 O script exibirá no console:
 
 * Um painel de resumo com o número total de arquivos, linhas totais, linhas em branco, linhas de comentário, linhas de código (total - branco - comentário) e tamanho total em Kbytes.
-* Um painel de estatísticas mostrando a contagem de arquivos, linhas totais, linhas em branco, linhas de comentário, linhas de código, tamanho total (KB) e porcentagem de arquivos para cada tipo de extensão encontrada, ordenado pelo número de arquivos.
+* Um painel de estatísticas mostrando a contagem de arquivos, linhas totais, linhas em branco, linhas de comentário, linhas de código, **Linhas Faturáveis (Total - Linhas em Branco)**, tamanho total (KB) e porcentagem de arquivos para cada tipo de extensão encontrada, ordenado pelo número de arquivos.
 
 Além disso, o script criará um arquivo CSV no mesmo diretório onde foi executado. O nome do arquivo seguirá o formato `result_AAAA-MM-DD-HH-MM.csv` (com a data e hora atuais). Este arquivo conterá:
 
-1. As estatísticas por extensão.
-2. Uma lista detalhada de cada arquivo encontrado, incluindo seu caminho relativo, tipo de arquivo (extensão), tamanho em Kbytes, número total de linhas, linhas em branco, linhas de comentário e linhas de código.
+1. As estatísticas por extensão (incluindo Linhas Faturáveis).
+2. Uma lista detalhada de cada arquivo encontrado, incluindo seu caminho relativo, tipo de arquivo (extensão), tamanho em Kbytes, número total de linhas, linhas em branco, linhas de comentário, linhas de código e **Linhas Faturáveis**.
 
 ### Atualizações
+
+#### 7 de Maio de 2025
+* Adicionada coluna "Linhas Faturáveis" ("Billable Lines") às saídas do console e CSV.
+* "Linhas Faturáveis" são calculadas como Linhas Totais - Linhas em Branco.
+* Isso fornece uma métrica para linhas que não estão vazias, independentemente de serem código ou comentários.
 
 #### 9 de Abril de 2025
 * Adicionado sistema de aviso para extensões de arquivo não reconhecidas

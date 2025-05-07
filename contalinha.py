@@ -326,7 +326,8 @@ def contar_arquivos_e_linhas(diretorio):
                 tamanho_por_extensao[extensao] += tamanho
 
                 caminho_relativo = os.path.relpath(caminho_completo, diretorio)
-                detalhes_arquivos.append((caminho_relativo, extensao, round(tamanho, 2), linhas, linhas_branco, linhas_comentario))
+                billable_lines_file = linhas - linhas_branco
+                detalhes_arquivos.append((caminho_relativo, extensao, round(tamanho, 2), linhas, linhas_branco, linhas_comentario, billable_lines_file))
             except FileNotFoundError:
                 print(f"Arquivo não encontrado: {caminho_completo}")
                 continue
@@ -395,6 +396,7 @@ if __name__ == "__main__":
     stats_table.add_column("Blank Lines", style="cyan")
     stats_table.add_column("Comment Lines", style="magenta")
     stats_table.add_column("Code Lines", style="green")
+    stats_table.add_column("Billable Lines", style="blue")
     
     # Ordenar extensões pelo número de arquivos (decrescente)
     extensoes_ordenadas = sorted(arquivos_por_extensao.keys(), 
@@ -413,7 +415,8 @@ if __name__ == "__main__":
             f"{porcentagem_arquivos:.1f}%",
             f"{linhas_branco_por_extensao[ext]:,}",
             f"{linhas_comentario_por_extensao[ext]:,}",
-            f"{linhas_codigo:,}"
+            f"{linhas_codigo:,}",
+            f"{(linhas_por_extensao[ext] - linhas_branco_por_extensao[ext]):,}"
         )
     
     # Criar painel de estatísticas
@@ -455,10 +458,11 @@ if __name__ == "__main__":
         
         # Adicionar estatísticas por extensão no início do arquivo
         csvwriter.writerow(["Estatísticas por extensão"])
-        csvwriter.writerow(["Extensão", "Arquivos", "Linhas", "Tamanho (KB)", "Linhas em Branco", "Linhas de Comentário", "Linhas de Código"])
+        csvwriter.writerow(["Extensão", "Arquivos", "Linhas", "Tamanho (KB)", "Linhas em Branco", "Linhas de Comentário", "Linhas de Código", "Billable Lines"])
         
         for ext in extensoes_ordenadas:
             linhas_codigo = linhas_por_extensao[ext] - linhas_branco_por_extensao[ext] - linhas_comentario_por_extensao[ext]
+            billable_lines_ext = linhas_por_extensao[ext] - linhas_branco_por_extensao[ext]
             csvwriter.writerow([
                 ext, 
                 arquivos_por_extensao[ext], 
@@ -466,20 +470,21 @@ if __name__ == "__main__":
                 round(tamanho_por_extensao[ext], 2),
                 linhas_branco_por_extensao[ext],
                 linhas_comentario_por_extensao[ext],
-                linhas_codigo
+                linhas_codigo,
+                billable_lines_ext
             ])
         
         # Adicionar linha em branco para separar as seções
         csvwriter.writerow([])
         
         # Adicionar detalhes dos arquivos
-        csvwriter.writerow(["Relative Path", "File Type", "File Size (Kbytes)", "Total of Lines", "Blank Lines", "Comment Lines", "Code Lines"])
+        csvwriter.writerow(["Relative Path", "File Type", "File Size (Kbytes)", "Total of Lines", "Blank Lines", "Comment Lines", "Code Lines", "Billable Lines"])
         
         # Adicionar cada arquivo com suas estatísticas
         for arquivo in detalhes_arquivos:
-            caminho, ext, tamanho, linhas, linhas_branco, linhas_comentario = arquivo
+            caminho, ext, tamanho, linhas, linhas_branco, linhas_comentario, billable_lines_file = arquivo # Unpack new value
             linhas_codigo = linhas - linhas_branco - linhas_comentario
-            csvwriter.writerow([caminho, ext, tamanho, linhas, linhas_branco, linhas_comentario, linhas_codigo])
+            csvwriter.writerow([caminho, ext, tamanho, linhas, linhas_branco, linhas_comentario, linhas_codigo, billable_lines_file])
     
     # Exibir resultado formatado como no exemplo
 #    print("\nResultado formatado:")

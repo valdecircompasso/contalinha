@@ -10,6 +10,9 @@ build/
 dist/
 *.spec
 
+# Memory Bank (project-specific, not for Git)
+memory-bank/
+
 # Python cache files
 __pycache__/
 *.py[cod]
