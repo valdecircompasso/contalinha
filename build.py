@@ -60,16 +60,17 @@ def build_executable():
                 "-m",
                 "PyInstaller",
                 "--onefile",
-                "--name=contalinha",
+                "--windowed",  # Added for GUI applications
+                "--name=contalinha-ui", # Changed name
                 "--clean",
-                "contalinha.py"
+                "contalinha-ui.py" # Changed target script
             ],
             capture_output=True,
             text=True
         )
         
         if result.returncode == 0:
-            print("Executable created successfully in the 'dist' folder")
+            print("Executable 'contalinha-ui.exe' created successfully in the 'dist' folder")
         else:
             print("Error building executable:")
             print(result.stderr)
@@ -132,11 +133,11 @@ def git_operations(commit_msg):
     
     # Add files to Git
     print("Adding files to Git...")
-    subprocess.run(["git", "add", "contalinha.py", "README.md", ".gitignore"])
+    subprocess.run(["git", "add", "contalinha.py", "contalinha-ui.py", "README.md", ".gitignore", "build.py", "requirements.txt"]) # Added contalinha-ui.py and other relevant files
     
     # Add the dist directory if it exists
     if os.path.exists("dist"):
-        subprocess.run(["git", "add", "dist/contalinha.exe"])
+        subprocess.run(["git", "add", "dist/contalinha-ui.exe"]) # Changed executable name
     
     # Commit changes
     print(f"Committing with message: {commit_msg}")
@@ -200,25 +201,26 @@ def create_github_release(version, token, message=None):
         
         # Upload the executable as an asset
         upload_url = release_info["upload_url"].split("{")[0]
-        asset_path = os.path.join("dist", "contalinha.exe")
+        asset_name = "contalinha-ui.exe" # Changed asset name
+        asset_path = os.path.join("dist", asset_name)
         
         if not os.path.exists(asset_path):
             print(f"Executable not found at {asset_path}. Skipping upload.")
             return True
         
-        print(f"Uploading executable to release...")
+        print(f"Uploading {asset_name} to release...")
         
         with open(asset_path, "rb") as file:
             upload_headers = headers.copy()
             upload_headers["Content-Type"] = "application/octet-stream"
             upload_response = requests.post(
-                f"{upload_url}?name=contalinha.exe",
+                f"{upload_url}?name={asset_name}", # Used variable for asset name
                 headers=upload_headers,
                 data=file
             )
             upload_response.raise_for_status()
             
-        print(f"Executable uploaded successfully to the release.")
+        print(f"{asset_name} uploaded successfully to the release.")
         return True
         
     except requests.exceptions.RequestException as e:
