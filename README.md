@@ -73,6 +73,8 @@ The `contalinha.exe` file (if previously packaged) is for the command-line versi
 *   Displays the selected directory.
 *   A "Summary" table with: Total Files, Total Lines, Total Size, Blank Lines, Comment Lines, Code Lines, and Billable Lines (each with values and percentages where applicable).
 *   A "Statistics by File Type" table showing: File Type, Files, Total Lines, Size (KB), % of Files, Blank Lines, Comment Lines, Code Lines, and Billable Lines for each extension.
+    *   This table is **scrollable** for directories with many file types.
+    *   Columns in this table are **sortable** by clicking their headers (click again to toggle order).
 *   A "Save Statistics" button to save a detailed CSV report.
 
 #### **Command-Line Version (`contalinha.py`)**
@@ -86,11 +88,13 @@ A CSV file named `result_YYYY-MM-DD-HH-MM.csv` containing:
 
 ### Updates
 
-#### **May 9, 2025 - UI Version Introduced!**
+#### **May 9, 2025 - UI Version Introduced & Enhanced!**
 *   **New GUI version `contalinha-ui.py` created using Tkinter.**
     *   Features directory selection via dialog.
     *   Displays results in two clear tables (Summary and Per Extension).
     *   Includes a "Save Statistics" button.
+    *   The "Statistics by File Type" table is **scrollable**.
+    *   Columns in the "Statistics by File Type" table are **sortable**.
 *   **The command-line script `contalinha.py` is now considered legacy and will not receive new features. Future development will focus on `contalinha-ui.py`.**
 
 #### May 7, 2025 (CLI Version)
@@ -174,6 +178,8 @@ O arquivo `contalinha.exe` (se empacotado anteriormente) é para a versão de li
 *   Exibe o diretório selecionado.
 *   Uma tabela "Resumo" com: Total de Arquivos, Total de Linhas, Tamanho Total, Linhas em Branco, Linhas de Comentário, Linhas de Código e Linhas Faturáveis (cada um com valores e porcentagens, quando aplicável).
 *   Uma tabela "Estatísticas por Tipo de Arquivo" mostrando: Tipo de Arquivo, Arquivos, Linhas Totais, Tamanho (KB), % de Arquivos, Linhas em Branco, Linhas de Comentário, Linhas de Código e Linhas Faturáveis para cada extensão.
+    *   Esta tabela possui **barra de rolagem** para diretórios com muitos tipos de arquivo.
+    *   As colunas nesta tabela são **ordenáveis** clicando em seus cabeçalhos (clique novamente para inverter a ordem).
 *   Um botão "Salvar Estatísticas" para salvar um relatório CSV detalhado.
 
 #### **Versão de Linha de Comando (`contalinha.py`)**
@@ -187,11 +193,13 @@ Um arquivo CSV chamado `result_AAAA-MM-DD-HH-MM.csv` contendo:
 
 ### Atualizações
 
-#### **9 de Maio de 2025 - Versão UI Introduzida!**
+#### **9 de Maio de 2025 - Versão UI Introduzida e Aprimorada!**
 *   **Nova versão GUI `contalinha-ui.py` criada usando Tkinter.**
     *   Apresenta seleção de diretório via diálogo.
     *   Exibe resultados em duas tabelas claras (Resumo e Por Extensão).
     *   Inclui um botão "Salvar Estatísticas".
+    *   A tabela "Estatísticas por Tipo de Arquivo" possui **barra de rolagem**.
+    *   As colunas na tabela "Estatísticas por Tipo de Arquivo" são **ordenáveis**.
 *   **O script de linha de comando `contalinha.py` é agora considerado legado e não receberá novas funcionalidades. O desenvolvimento futuro focar-se-á em `contalinha-ui.py`.**
 
 #### 7 de Maio de 2025 (Versão CLI)
