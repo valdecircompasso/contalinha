@@ -245,7 +245,6 @@ def display_results(result_data):
      linhas_branco_por_extensao, linhas_comentario_por_extensao,
      _extensoes_nao_reconhecidas, _arquivos_nao_reconhecidos, _linhas_nao_reconhecidas) = result_data
 
-    # Clear previous results from both trees
     for item in summary_tree.get_children():
         summary_tree.delete(item)
     for item in details_tree.get_children():
@@ -256,7 +255,6 @@ def display_results(result_data):
     total_linhas_codigo = total_linhas - total_linhas_branco - total_linhas_comentario
     total_billable_lines = total_linhas - total_linhas_branco
 
-    # Populate Summary TreeView
     summary_tree.insert("", tk.END, values=("Total Files", total_arquivos, ""), tags=('summary',))
     summary_tree.insert("", tk.END, values=("Total Lines", total_linhas, ""), tags=('summary',))
     summary_tree.insert("", tk.END, values=("Total Size", f"{total_tamanho:.2f} Kbytes", ""), tags=('summary',))
@@ -271,28 +269,74 @@ def display_results(result_data):
     summary_tree.insert("", tk.END, values=("Code Lines", total_linhas_codigo, f"{code_percent:.1f}%"), tags=('summary',))
     summary_tree.insert("", tk.END, values=("Billable Lines", total_billable_lines, f"{billable_percent:.1f}%"), tags=('summary',))
     
-    # Populate Details TreeView (Extension Stats)
     extensoes_ordenadas = sorted(arquivos_por_extensao.keys(), 
                                  key=lambda ext: arquivos_por_extensao[ext], 
-                                 reverse=True)
+                                 reverse=True) # Default sort for initial display
     
-    for i, ext in enumerate(extensoes_ordenadas):
-        tag = 'ext_even' if i % 2 == 0 else 'ext_odd' 
-        porcentagem_arquivos = (arquivos_por_extensao[ext] / total_arquivos) * 100 if total_arquivos > 0 else 0
-        linhas_codigo_ext = linhas_por_extensao[ext] - linhas_branco_por_extensao[ext] - linhas_comentario_por_extensao[ext]
-        billable_lines_ext = linhas_por_extensao[ext] - linhas_branco_por_extensao[ext]
+    populate_details_tree(extensoes_ordenadas, arquivos_por_extensao, linhas_por_extensao, tamanho_por_extensao, linhas_branco_por_extensao, linhas_comentario_por_extensao, total_arquivos)
+
+
+def populate_details_tree(ordered_extensions, arquivos_por_ext, linhas_por_ext, tamanho_por_ext, linhas_branco_por_ext, linhas_comentario_por_ext, total_arquivos_overall):
+    for item in details_tree.get_children():
+        details_tree.delete(item)
+
+    for i, ext in enumerate(ordered_extensions):
+        tag = 'ext_even' if i % 2 == 0 else 'ext_odd'
+        porcentagem_arquivos = (arquivos_por_ext[ext] / total_arquivos_overall * 100) if total_arquivos_overall > 0 else 0
+        linhas_codigo_ext = linhas_por_ext[ext] - linhas_branco_por_ext[ext] - linhas_comentario_por_ext[ext]
+        billable_lines_ext = linhas_por_ext[ext] - linhas_branco_por_ext[ext]
         
         details_tree.insert("", tk.END, values=(
             ext, 
-            f"{arquivos_por_extensao[ext]:,}", 
-            f"{linhas_por_extensao[ext]:,}", 
-            f"{tamanho_por_extensao[ext]:.2f}", 
+            f"{arquivos_por_ext[ext]:,}", 
+            f"{linhas_por_ext[ext]:,}", 
+            f"{tamanho_por_ext[ext]:.2f}", 
             f"{porcentagem_arquivos:.1f}%", 
-            f"{linhas_branco_por_extensao[ext]:,}", 
-            f"{linhas_comentario_por_extensao[ext]:,}", 
+            f"{linhas_branco_por_ext[ext]:,}", 
+            f"{linhas_comentario_por_ext[ext]:,}", 
             f"{linhas_codigo_ext:,}", 
             f"{billable_lines_ext:,}"
             ), tags=(tag,))
+
+def sort_column(tree, col, reverse):
+    # Get data from tree
+    l = []
+    for k in tree.get_children(''):
+        col_val = tree.set(k, col)
+        # Attempt to convert to number for sorting, fallback to string
+        try:
+            # Handle formatted numbers (e.g., "1,234", "10.5%")
+            cleaned_val = col_val.replace(',', '').replace('%', '')
+            num_val = float(cleaned_val)
+            l.append((num_val, k))
+        except ValueError:
+            l.append((col_val.lower(), k)) # Sort strings case-insensitively
+
+    try:
+        l.sort(key=lambda t: t[0], reverse=reverse)
+    except TypeError: # Fallback for mixed types if conversion failed unexpectedly
+        l.sort(key=lambda t: str(t[0]), reverse=reverse)
+
+
+    # Rearrange items in sorted positions
+    for index, (val, k) in enumerate(l):
+        tree.move(k, '', index)
+
+    # Reapply alternating row colors
+    children = tree.get_children('')
+    for i, child_id in enumerate(children):
+        tag = 'ext_even' if i % 2 == 0 else 'ext_odd'
+        current_tags = list(tree.item(child_id, 'tags'))
+        # Remove old color tags if they exist
+        if 'ext_even' in current_tags: current_tags.remove('ext_even')
+        if 'ext_odd' in current_tags: current_tags.remove('ext_odd')
+        current_tags.append(tag)
+        tree.item(child_id, tags=tuple(current_tags))
+
+
+    # Update the heading command to toggle reverse sorting
+    tree.heading(col, command=lambda c=col: sort_column(tree, c, not reverse))
+
 
 def save_statistics_to_csv():
     global latest_results_data
@@ -322,7 +366,7 @@ def save_statistics_to_csv():
         with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
             csvwriter = csv.writer(csvfile)
             
-            csvwriter.writerow(["Estatísticas por extensão"]) # This seems like a title for the section below
+            csvwriter.writerow(["Estatísticas por extensão"]) 
             csvwriter.writerow(["Extensão", "Arquivos", "Linhas", "Tamanho (KB)", "Linhas em Branco", "Linhas de Comentário", "Linhas de Código", "Billable Lines"])
             
             extensoes_ordenadas = sorted(arquivos_por_extensao.keys(), 
@@ -346,7 +390,7 @@ def save_statistics_to_csv():
             
             csvwriter.writerow(["Relative Path", "File Type", "File Size (Kbytes)", "Total of Lines", "Blank Lines", "Comment Lines", "Code Lines", "Billable Lines"])
             
-            for arquivo_detalhe in detalhes_arquivos: # This is the per-file detail, not summary or per-extension
+            for arquivo_detalhe in detalhes_arquivos: 
                 caminho, ext_detalhe, tamanho_detalhe, linhas_detalhe, linhas_branco_detalhe, linhas_comentario_detalhe, billable_lines_file_detalhe = arquivo_detalhe
                 linhas_codigo_detalhe = linhas_detalhe - linhas_branco_detalhe - linhas_comentario_detalhe
                 csvwriter.writerow([caminho, ext_detalhe, tamanho_detalhe, linhas_detalhe, linhas_branco_detalhe, linhas_comentario_detalhe, linhas_codigo_detalhe, billable_lines_file_detalhe])
@@ -372,41 +416,7 @@ style.configure("Treeview.Heading",
                 font=('Calibri', 10, 'bold'))
 style.map("Treeview.Heading", background=[('active', '#d1d1d1')])
 
-# Common Treeview row font
 tree_font = ('Calibri', 10)
-
-# Summary TreeView
-summary_columns = ("Metric", "Value", "Percentage")
-summary_tree = ttk.Treeview(app, columns=summary_columns, show="headings", height=7) # height for ~7 summary rows
-summary_tree.heading("Metric", text="Metric")
-summary_tree.heading("Value", text="Value")
-summary_tree.heading("Percentage", text="Percentage")
-summary_tree.column("Metric", width=150, anchor='w')
-summary_tree.column("Value", width=100, anchor='e')
-summary_tree.column("Percentage", width=100, anchor='e')
-summary_tree.tag_configure('summary', background='#e6f3ff', font=tree_font)
-style.configure('summary.Treeview', font=tree_font, rowheight=25) # Apply base style for summary rows
-
-# Details TreeView (Extension Stats)
-details_columns = ("File Type", "Files", "Total Lines", "Size (KB)", "% of Files", "Blank Lines", "Comment Lines", "Code Lines", "Billable Lines")
-details_tree = ttk.Treeview(app, columns=details_columns, show="headings")
-details_tree.heading("File Type", text="File Type")
-details_tree.heading("Files", text="Files")
-details_tree.heading("Total Lines", text="Total Lines")
-details_tree.heading("Size (KB)", text="Size (KB)")
-details_tree.heading("% of Files", text="% of Files")
-details_tree.heading("Blank Lines", text="Blank Lines")
-details_tree.heading("Comment Lines", text="Comment Lines")
-details_tree.heading("Code Lines", text="Code Lines")
-details_tree.heading("Billable Lines", text="Billable Lines")
-
-details_tree.tag_configure('ext_even', background='white', font=tree_font)
-details_tree.tag_configure('ext_odd', background='#f0f8ff', font=tree_font) # AliceBlue
-style.configure('details.Treeview', font=tree_font, rowheight=25) # Apply base style for details rows
-
-for col_id in details_columns:
-    details_tree.column(col_id, width=100, anchor='e' if col_id not in ["File Type"] else 'w')
-
 
 instruction_label = ttk.Label(app, text="Select a directory to process:")
 instruction_label.pack(pady=5)
@@ -420,15 +430,44 @@ selected_directory_label.pack(pady=5)
 save_button = ttk.Button(app, text="Save Statistics", command=save_statistics_to_csv, state=tk.DISABLED) 
 save_button.pack(pady=5)
 
-# Add a label for the Summary section
 summary_label = ttk.Label(app, text="Summary", font=('Calibri', 12, 'bold'))
 summary_label.pack(pady=(10,0))
-summary_tree.pack(pady=5, fill="x", expand=False) # Summary tree doesn't need to expand y
+summary_columns = ("Metric", "Value", "Percentage")
+summary_tree = ttk.Treeview(app, columns=summary_columns, show="headings", height=7) 
+summary_tree.heading("Metric", text="Metric")
+summary_tree.heading("Value", text="Value")
+summary_tree.heading("Percentage", text="Percentage")
+summary_tree.column("Metric", width=150, anchor='w')
+summary_tree.column("Value", width=100, anchor='e')
+summary_tree.column("Percentage", width=100, anchor='e')
+summary_tree.tag_configure('summary', background='#e6f3ff', font=tree_font)
+style.configure('summary.Treeview', font=tree_font, rowheight=25) 
+summary_tree.pack(pady=5, fill="x", expand=False)
 
-# Add a label for the Extension Statistics section
-details_label = ttk.Label(app, text="Statistics by File Type", font=('Calibri', 12, 'bold'))
+details_label = ttk.Label(app, text="Statistics by File Type (click column to sort)", font=('Calibri', 12, 'bold'))
 details_label.pack(pady=(10,0))
-details_tree.pack(pady=10, fill="both", expand=True)
 
+details_frame = ttk.Frame(app) 
+details_frame.pack(pady=10, fill="both", expand=True)
+
+details_columns_ids = ("file_type", "files", "total_lines", "size_kb", "percent_files", "blank_lines", "comment_lines", "code_lines", "billable_lines")
+details_columns_text = ("File Type", "Files", "Total Lines", "Size (KB)", "% of Files", "Blank Lines", "Comment Lines", "Code Lines", "Billable Lines")
+
+details_tree = ttk.Treeview(details_frame, columns=details_columns_ids, show="headings")
+
+for col_id, col_text in zip(details_columns_ids, details_columns_text):
+    details_tree.heading(col_id, text=col_text, command=lambda c=col_id: sort_column(details_tree, c, False))
+    details_tree.column(col_id, width=100, anchor='e' if col_id not in ["file_type"] else 'w')
+
+
+details_tree.tag_configure('ext_even', background='white', font=tree_font)
+details_tree.tag_configure('ext_odd', background='#f0f8ff', font=tree_font) 
+style.configure('details.Treeview', font=tree_font, rowheight=25) 
+
+details_scrollbar = ttk.Scrollbar(details_frame, orient="vertical", command=details_tree.yview)
+details_tree.configure(yscrollcommand=details_scrollbar.set)
+
+details_scrollbar.pack(side="right", fill="y")
+details_tree.pack(side="left", fill="both", expand=True)
 
 app.mainloop()
