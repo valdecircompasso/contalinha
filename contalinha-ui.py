@@ -5,6 +5,7 @@ import csv
 import datetime
 import re
 from collections import defaultdict
+import threading
 
 COMMENT_SYNTAX = {
     '.py': {'line': ['#'], 'block': [('"""', '"""'), ("'''", "'''")]},
@@ -39,7 +40,7 @@ COMMENT_SYNTAX = {
     '.lisp': {'line': [';'], 'block': []},
     '.clj': {'line': [';'], 'block': []},
     '.hs': {'line': ['--'], 'block': [('{-', '-}')]},
-    '.lua': {'line': ['--'], 'block': [('--[[', ']]')]},
+    '.lua': {'line': ['//'], 'block': [('--[[', ']]')]},
     '.go': {'line': ['//'], 'block': [('/*', '*/')]},
     '.rs': {'line': ['//'], 'block': [('/*', '*/')]},
     '.cob': {'line': ['*'], 'block': []},
@@ -100,6 +101,9 @@ BLOCK_COMMENT_PATTERNS = [
 ]
 
 latest_results_data = None
+first_run = True  # Flag to track if this is the first run
+progress = None  # Progress bar widget
+processing = False  # Flag to indicate if processing is in progress
 
 def process_line(line, file_ext, in_block_comment=None):
     if not line.strip():
@@ -166,7 +170,27 @@ def process_file(file_path, file_ext):
     
     return total_lines, blank_lines, comment_lines
 
+def count_files_in_directory(directory):
+    """Count total number of files in directory for progress bar"""
+    total_files = 0
+    for _, _, files in os.walk(directory):
+        total_files += len(files)
+    return total_files
+
 def contar_arquivos_e_linhas(diretorio):
+    global progress, processing
+    
+    # First count total files for progress bar
+    total_files = count_files_in_directory(diretorio)
+    if progress:
+        progress['maximum'] = total_files
+        progress['value'] = 0
+    
+    # If running in the main thread, update the UI
+    if hasattr(app, 'update'):
+        app.update()
+    
+    processed_files = 0
     overall_total_arquivos = 0
     overall_total_linhas = 0
     overall_total_tamanho = 0
@@ -220,20 +244,90 @@ def contar_arquivos_e_linhas(diretorio):
                 print(f"Arquivo não encontrado: {caminho_completo}")
             except Exception as e:
                 print(f"Erro ao processar arquivo {caminho_completo}: {str(e)}")
+            
+            # Update progress bar
+            processed_files += 1
+            if progress and hasattr(app, 'update'):
+                progress['value'] = processed_files
+                app.update()
     
     return (overall_total_arquivos, overall_total_linhas, overall_total_tamanho, detalhes_arquivos, 
             arquivos_por_extensao, linhas_por_extensao, tamanho_por_extensao,
             linhas_branco_por_extensao, linhas_comentario_por_extensao,
             extensoes_nao_reconhecidas, arquivos_nao_reconhecidos, linhas_nao_reconhecidas)
 
+def start_processing_in_thread(directory):
+    """Start the processing in a separate thread to keep UI responsive"""
+    global latest_results_data, processing, first_run
+    
+    try:
+        processing = True
+        process_button.config(state=tk.DISABLED)
+        
+        # Update progress bar while processing
+        if progress:
+            progress.pack(pady=5, fill="x", expand=False, before=summary_label)
+            progress['value'] = 0
+        
+        # Process the files
+        latest_results_data = contar_arquivos_e_linhas(directory)
+        
+        # Update UI in the main thread
+        app.after(0, lambda: display_results_and_cleanup(latest_results_data))
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred during processing: {str(e)}")
+        processing = False
+        process_button.config(state=tk.NORMAL)
+
+def display_results_and_cleanup(result_data):
+    """Display results and clean up after processing is complete"""
+    global processing, first_run
+    
+    display_results(result_data)
+    save_button.config(state=tk.NORMAL)
+    process_button.config(state=tk.NORMAL)
+    
+    # Hide progress bar when done
+    if progress:
+        progress.pack_forget()
+    
+    processing = False
+    first_run = False
+
 def process_directory():
-    global latest_results_data
+    """Handler for the Select Directory button"""
+    global latest_results_data, first_run, processing
+    
+    if processing:
+        messagebox.showinfo("Processing", "Please wait until the current analysis completes.")
+        return
+    
+    # If not first run, show warning
+    if not first_run:
+        confirm = messagebox.askyesno(
+            "Warning", 
+            "This will clear the current results and analyze a new directory. Continue?"
+        )
+        if not confirm:
+            return
+        
+        # Clear the trees before running again
+        for item in summary_tree.get_children():
+            summary_tree.delete(item)
+        for item in details_tree.get_children():
+            details_tree.delete(item)
+    
     directory = filedialog.askdirectory()
     if directory:
-        selected_directory_label.config(text=f"Selected Directory: {directory}") 
-        latest_results_data = contar_arquivos_e_linhas(directory)
-        display_results(latest_results_data)
-        save_button.config(state=tk.NORMAL) 
+        selected_directory_label.config(text=f"Selected Directory: {directory}")
+        
+        # Start processing in a separate thread
+        processing_thread = threading.Thread(
+            target=start_processing_in_thread,
+            args=(directory,),
+            daemon=True
+        )
+        processing_thread.start()
     else:
         selected_directory_label.config(text="Selected Directory: None")
         latest_results_data = None
@@ -429,6 +523,10 @@ selected_directory_label.pack(pady=5)
 
 save_button = ttk.Button(app, text="Save Statistics", command=save_statistics_to_csv, state=tk.DISABLED) 
 save_button.pack(pady=5)
+
+# Create progress bar
+progress = ttk.Progressbar(app, orient="horizontal", length=400, mode="determinate")
+# The progress bar will be displayed only during processing using grid()
 
 summary_label = ttk.Label(app, text="Summary", font=('Calibri', 12, 'bold'))
 summary_label.pack(pady=(10,0))

@@ -76,6 +76,8 @@ The `contalinha.exe` file (if previously packaged) is for the command-line versi
     *   This table is **scrollable** for directories with many file types.
     *   Columns in this table are **sortable** by clicking their headers (click again to toggle order).
 *   A "Save Statistics" button to save a detailed CSV report.
+*   The user is warned when selecting a new directory, and the screen is cleared.
+*   A progress bar is displayed during processing.
 
 #### **Command-Line Version (`contalinha.py`)**
 *   A summary panel with total files, total lines, blank lines, comment lines, code lines, and total size.
@@ -87,6 +89,10 @@ A CSV file named `result_YYYY-MM-DD-HH-MM.csv` containing:
 2.  A detailed list of each file (relative path, type, size, line counts, etc.).
 
 ### Updates
+
+#### **May 13, 2025 - UI Version Enhanced!**
+*   Added a progress bar.
+*   When the user selects a new directory, they are warned, and the screen is cleared.
 
 #### **May 9, 2025 - UI Version Introduced & Enhanced!**
 *   **New GUI version `contalinha-ui.py` created using Tkinter.**
@@ -181,6 +187,8 @@ O arquivo `contalinha.exe` (se empacotado anteriormente) é para a versão de li
     *   Esta tabela possui **barra de rolagem** para diretórios com muitos tipos de arquivo.
     *   As colunas nesta tabela são **ordenáveis** clicando em seus cabeçalhos (clique novamente para inverter a ordem).
 *   Um botão "Salvar Estatísticas" para salvar um relatório CSV detalhado.
+*   O usuário é avisado ao selecionar um novo diretório, e a tela é limpa.
+*   Uma barra de progresso é exibida durante o processamento.
 
 #### **Versão de Linha de Comando (`contalinha.py`)**
 *   Um painel de resumo com total de arquivos, linhas totais, linhas em branco, linhas de comentário, linhas de código e tamanho total.
@@ -192,6 +200,10 @@ Um arquivo CSV chamado `result_AAAA-MM-DD-HH-MM.csv` contendo:
 2.  Uma lista detalhada de cada arquivo (caminho relativo, tipo, tamanho, contagens de linha, etc.).
 
 ### Atualizações
+
+#### **13 de Maio de 2025 - Versão UI Aprimorada!**
+*   Adicionada uma barra de progresso.
+*   Quando o usuário seleciona um novo diretório, ele é avisado, e a tela é limpa.
 
 #### **9 de Maio de 2025 - Versão UI Introduzida e Aprimorada!**
 *   **Nova versão GUI `contalinha-ui.py` criada usando Tkinter.**
