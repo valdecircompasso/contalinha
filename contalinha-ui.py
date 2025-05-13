@@ -7,6 +7,9 @@ import re
 from collections import defaultdict
 import threading
 
+VERSION = "1.0"
+BUILD_DATE = "May 13, 2025"
+
 COMMENT_SYNTAX = {
     '.py': {'line': ['#'], 'block': [('"""', '"""'), ("'''", "'''")]},
     '.js': {'line': ['//'], 'block': [('/*', '*/')]},
@@ -27,7 +30,7 @@ COMMENT_SYNTAX = {
     '.hpp': {'line': ['//'], 'block': [('/*', '*/')]},
     '.cs': {'line': ['//'], 'block': [('/*', '*/')]},
     '.java': {'line': ['//'], 'block': [('/*', '*/')]},
-    '.kt': {'line': ['//'], 'block': [('/*', '*/')]},
+    '.kt': {'line': ['//'], 'block': []},
     '.sh': {'line': ['#'], 'block': []},
     '.bash': {'line': ['#'], 'block': []},
     '.zsh': {'line': ['#'], 'block': []},
@@ -104,6 +107,7 @@ latest_results_data = None
 first_run = True  # Flag to track if this is the first run
 progress = None  # Progress bar widget
 processing = False  # Flag to indicate if processing is in progress
+stop_flag = False # Flag to stop processing
 
 def process_line(line, file_ext, in_block_comment=None):
     if not line.strip():
@@ -178,7 +182,7 @@ def count_files_in_directory(directory):
     return total_files
 
 def contar_arquivos_e_linhas(diretorio):
-    global progress, processing
+    global progress, processing, stop_flag
     
     # First count total files for progress bar
     total_files = count_files_in_directory(diretorio)
@@ -207,8 +211,12 @@ def contar_arquivos_e_linhas(diretorio):
     linhas_comentario_por_extensao = defaultdict(int)
     tamanho_por_extensao = defaultdict(float)
     
-    for raiz, _, arquivos in os.walk(diretorio): 
+    for raiz, _, arquivos in os.walk(diretorio):
         for arquivo in arquivos:
+            # Check stop flag
+            if stop_flag:
+                break
+                
             extensao = os.path.splitext(arquivo)[1].lower()
             if not extensao:
                 extensao = "(sem extensão)"
@@ -250,7 +258,8 @@ def contar_arquivos_e_linhas(diretorio):
             if progress and hasattr(app, 'update'):
                 progress['value'] = processed_files
                 app.update()
-    
+        if stop_flag:
+            break
     return (overall_total_arquivos, overall_total_linhas, overall_total_tamanho, detalhes_arquivos, 
             arquivos_por_extensao, linhas_por_extensao, tamanho_por_extensao,
             linhas_branco_por_extensao, linhas_comentario_por_extensao,
@@ -258,11 +267,13 @@ def contar_arquivos_e_linhas(diretorio):
 
 def start_processing_in_thread(directory):
     """Start the processing in a separate thread to keep UI responsive"""
-    global latest_results_data, processing, first_run
+    global latest_results_data, processing, first_run, stop_flag
     
     try:
         processing = True
         process_button.config(state=tk.DISABLED)
+        stop_button.config(state=tk.NORMAL)
+        stop_flag = False
         
         # Update progress bar while processing
         if progress:
@@ -278,14 +289,16 @@ def start_processing_in_thread(directory):
         messagebox.showerror("Error", f"An error occurred during processing: {str(e)}")
         processing = False
         process_button.config(state=tk.NORMAL)
+        stop_button.config(state=tk.DISABLED)
 
 def display_results_and_cleanup(result_data):
     """Display results and clean up after processing is complete"""
-    global processing, first_run
+    global processing, first_run, stop_flag
     
     display_results(result_data)
     save_button.config(state=tk.NORMAL)
     process_button.config(state=tk.NORMAL)
+    stop_button.config(state=tk.DISABLED)
     
     # Hide progress bar when done
     if progress:
@@ -293,6 +306,7 @@ def display_results_and_cleanup(result_data):
     
     processing = False
     first_run = False
+    stop_flag = False
 
 def process_directory():
     """Handler for the Select Directory button"""
@@ -349,8 +363,8 @@ def display_results(result_data):
     total_linhas_codigo = total_linhas - total_linhas_branco - total_linhas_comentario
     total_billable_lines = total_linhas - total_linhas_branco
 
-    summary_tree.insert("", tk.END, values=("Total Files", total_arquivos, ""), tags=('summary',))
-    summary_tree.insert("", tk.END, values=("Total Lines", total_linhas, ""), tags=('summary',))
+    summary_tree.insert("", tk.END, values=("Total Files", f"{total_arquivos:,.0f}".replace(',', '.'), ""), tags=('summary',))
+    summary_tree.insert("", tk.END, values=("Total Lines", f"{total_linhas:,.0f}".replace(',', '.'), ""), tags=('summary',))
     summary_tree.insert("", tk.END, values=("Total Size", f"{total_tamanho:.2f} Kbytes", ""), tags=('summary',))
     
     blank_percent = (total_linhas_branco / total_linhas * 100) if total_linhas > 0 else 0
@@ -358,10 +372,10 @@ def display_results(result_data):
     code_percent = (total_linhas_codigo / total_linhas * 100) if total_linhas > 0 else 0
     billable_percent = (total_billable_lines / total_linhas * 100) if total_linhas > 0 else 0
     
-    summary_tree.insert("", tk.END, values=("Blank Lines", total_linhas_branco, f"{blank_percent:.1f}%"), tags=('summary',))
-    summary_tree.insert("", tk.END, values=("Comment Lines", total_linhas_comentario, f"{comment_percent:.1f}%"), tags=('summary',))
-    summary_tree.insert("", tk.END, values=("Code Lines", total_linhas_codigo, f"{code_percent:.1f}%"), tags=('summary',))
-    summary_tree.insert("", tk.END, values=("Billable Lines", total_billable_lines, f"{billable_percent:.1f}%"), tags=('summary',))
+    summary_tree.insert("", tk.END, values=("Blank Lines", f"{total_linhas_branco:,.0f}".replace(',', '.'), f"{blank_percent:.1f}%"), tags=('summary',))
+    summary_tree.insert("", tk.END, values=("Comment Lines", f"{total_linhas_comentario:,.0f}".replace(',', '.'), f"{comment_percent:.1f}%"), tags=('summary',))
+    summary_tree.insert("", tk.END, values=("Code Lines", f"{total_linhas_codigo:,.0f}".replace(',', '.'), f"{code_percent:.1f}%"), tags=('summary',))
+    summary_tree.insert("", tk.END, values=("Billable Lines", f"{total_billable_lines:,.0f}".replace(',', '.'), f"{billable_percent:.1f}%"), tags=('summary',))
     
     extensoes_ordenadas = sorted(arquivos_por_extensao.keys(), 
                                  key=lambda ext: arquivos_por_extensao[ext], 
@@ -493,6 +507,12 @@ def save_statistics_to_csv():
     except Exception as e:
         messagebox.showerror("Save Error", f"Could not save file: {str(e)}")
 
+def stop_processing():
+    global stop_flag
+    if messagebox.askyesno("Confirmation", "Are you sure you want to stop processing?"):
+        stop_flag = True
+        messagebox.showinfo("Info", "Processing will stop after the current file.")
+
 app = tk.Tk()
 app.title("Contalinha UI")
 app.configure(bg='#f0f0f0') 
@@ -524,9 +544,15 @@ selected_directory_label.pack(pady=5)
 save_button = ttk.Button(app, text="Save Statistics", command=save_statistics_to_csv, state=tk.DISABLED) 
 save_button.pack(pady=5)
 
+stop_button = ttk.Button(app, text="STOP", command=stop_processing, state=tk.DISABLED)
+stop_button.pack(pady=5)
+
 # Create progress bar
 progress = ttk.Progressbar(app, orient="horizontal", length=400, mode="determinate")
 # The progress bar will be displayed only during processing using grid()
+
+version_label = ttk.Label(app, text=f"Version: {VERSION} - Build Date: {BUILD_DATE}")
+version_label.pack(pady=5)
 
 summary_label = ttk.Label(app, text="Summary", font=('Calibri', 12, 'bold'))
 summary_label.pack(pady=(10,0))
